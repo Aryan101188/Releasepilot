@@ -71,8 +71,7 @@ def home():
 
 
 @app.post("/evaluate")
-def evaluate(request: EvaluateRequest):
-
+def evaluate_feature(request: EvaluateRequest):
     db = SessionLocal()
 
     feature = db.query(FeatureFlag).filter(
@@ -83,26 +82,21 @@ def evaluate(request: EvaluateRequest):
         db.close()
         return {"error": "Feature not found"}
 
-    if not feature.enabled:
-        db.close()
-        return {
-            "feature": request.feature,
-            "user_id": request.user_id,
-            "enabled": False
-        }
+    bucket = get_bucket(feature.key, request.user_id)
 
-    bucket = get_bucket(request.feature, request.user_id)
+    enabled = (
+        feature.enabled
+        and bucket < feature.rollout_percentage
+    )
 
-    enabled = bucket < feature.rollout_percentage
+    rollout_percentage = feature.rollout_percentage
 
     db.close()
 
     return {
-        "feature": request.feature,
-        "user_id": request.user_id,
+        "enabled": enabled,
         "bucket": bucket,
-        "rollout_percentage": feature.rollout_percentage,
-        "enabled": enabled
+        "rollout_percentage": rollout_percentage
     }
 @app.get("/features")
 def get_features():

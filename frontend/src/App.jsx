@@ -66,6 +66,16 @@ function App() {
     loadData();
   };
 
+  // Toggle feature directly from the dashboard
+  const toggleFeature = async (feature) => {
+    await axios.put(`${API}/features/${feature.id}`, {
+      enabled: !feature.enabled,
+      rollout_percentage: feature.rollout_percentage,
+    });
+
+    loadData();
+  };
+
   const rollback = async (id) => {
     await axios.post(`${API}/features/${id}/rollback`);
     loadData();
@@ -211,13 +221,15 @@ function App() {
                 </p>
 
                 <div className="feature-status">
-                  <span
-                    className={`toggle ${
-                      feature.enabled ? "on" : ""
-                    }`}
+
+                  <button
+                    type="button"
+                    className={`toggle ${feature.enabled ? "on" : ""}`}
+                    onClick={() => toggleFeature(feature)}
+                    aria-label={`Toggle ${feature.key}`}
                   >
                     <span></span>
-                  </span>
+                  </button>
 
                   <span>
                     {feature.enabled ? "Enabled" : "Disabled"}
@@ -441,6 +453,7 @@ function App() {
             />
 
             <div className="modal-actions">
+
               <button
                 className="cancel-btn"
                 onClick={() => setShowCreate(false)}
@@ -454,6 +467,7 @@ function App() {
               >
                 Create
               </button>
+
             </div>
 
           </div>
